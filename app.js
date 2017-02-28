@@ -11,18 +11,22 @@ var path = require("path");
 var upload = multer();
 var app = express();
 var port = Number(process.env.PORT || 5000);
-app.use(bodyParser.json()); // to support JSON-encoded bodies
+app.use(bodyParser.json({keepExtensions:true})); // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({
   extended: true
 }));
- 
+app.set('view engine', 'ejs'); 
 // Home page
 app.get('/',function(req,res){
+    res.render('../sendmail.ejs');
+});
+
+app.get('/index',function(req,res){
     res.sendfile('index.html');
 });
  
 // sending mail function
-app.post('/send',upload.any(), function(req, res){
+app.post('/send', upload.any(), function(req, res){
     /*sampleFile = req.files;
     console.log(sampleFile);
     var filepath = path.join(__dirname, "tick.pdf");
@@ -74,8 +78,9 @@ app.post('/send',upload.any(), function(req, res){
           //console.log(response)
              res.send("Email has been sent successfully");
         } 
-	});*/
-
+	});
+        var file = req.files;
+        console.log(file);
         var filepath = path.join(__dirname, "tick.pdf");
         fs.readFile('tick.pdf', function (err, data) {
         if (err) throw err;                                                  
@@ -101,9 +106,28 @@ app.post('/send',upload.any(), function(req, res){
             }
             console.log('Message sent: ' + info.response);
         });
-        console.log(data);
-        });
+        //console.log(data);
+        });*/
 
+    var file = req.files;
+    console.log(file);
+    var filepath = path.join(__dirname, file[0].originalname);
+    //console.log(filepath);
+
+    //return false;    
+    nodemailer.mail({
+      from: "nanibabu.bheemireddi@credencys.com",      
+      to: "nanibabu.bheemireddi@credencys.com", 
+      subject: "Hello",
+      text: "Hello world ✔", // plaintext body
+      attachments: [
+        {
+            filename: file[0].originalname,   
+            streamSource: fs.createReadStream(filepath),
+        }]
+  });
+ res.send("Email has been sent successfully"); 
+   
 
 });
 
