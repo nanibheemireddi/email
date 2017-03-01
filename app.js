@@ -5,11 +5,17 @@ var transporter = nodemailer.createTransport();
 
 var bodyParser = require('body-parser');
 var validator = require('validator');
-var fs = require('file-system');
+var fs = require('fs');
 var multer = require("multer");
 var path = require("path");
+directory = path.dirname("");
+var parent = path.resolve(directory, '..');
+var uploaddir = parent + (path.sep) +'email' + (path.sep);
 var upload = multer();
 var app = express();
+var filepaths = require('filepath');
+var fileupload = require('fileupload');
+
 var port = Number(process.env.PORT || 5000);
 app.use(bodyParser.json({keepExtensions:true})); // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({
@@ -26,7 +32,7 @@ app.get('/index',function(req,res){
 });
  
 // sending mail function
-app.post('/send', upload.any(), function(req, res){
+app.post('/send', upload.array("proposalDocument"), function(req, res){
     /*sampleFile = req.files;
     console.log(sampleFile);
     var filepath = path.join(__dirname, "tick.pdf");
@@ -108,12 +114,16 @@ app.post('/send', upload.any(), function(req, res){
         });
         //console.log(data);
         });*/
-
     var file = req.files;
     console.log(file);
+    console.log(uploaddir);
+    fs.writeFile(uploaddir+file[0].originalname, file[0].buffer,function(err){
+        //console.log(err);    
+    });
+    //var pathfile = filepaths.create(file[0].originalname);
+    //console.log(fs.realpathSync(file[0].originalname, []));
     var filepath = path.join(__dirname, file[0].originalname);
-    //console.log(filepath);
-
+    console.log(filepath)
     //return false;    
     nodemailer.mail({
       from: "nanibabu.bheemireddi@credencys.com",      
@@ -125,18 +135,14 @@ app.post('/send', upload.any(), function(req, res){
             filename: file[0].originalname,   
             streamSource: fs.createReadStream(filepath),
         }]
-  });
- res.send("Email has been sent successfully"); 
-   
-
+    });
+    fs.unlink(uploaddir + file[0].originalname, function(err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+    res.send("Email has been sent successfully"); 
 });
-
-
-
-
-
-
- 
 // Starting server
 var server = http.createServer(app).listen(port, function() {
 console.log("Listening on " + port);
